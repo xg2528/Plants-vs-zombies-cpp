@@ -1,0 +1,12 @@
+# Visual Studio 缓存
+.vs/
+*.user
+*.suo
+# 编译中间文件
+Debug/
+Release/
+x64/
+# 其他可能的临时文件
+*.exe
+*.obj
+*.pdb
