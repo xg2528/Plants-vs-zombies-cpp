@@ -1,8 +1,8 @@
 # 植物大战僵尸 - C++ 简易还原版  
 ## Plants vs. Zombies - Simple C++ Recreation
 
-一个使用 C++ 和 EasyX 图形库开发的《植物大战僵尸》基础版本，旨在练习游戏开发与面向对象编程。  
-A basic clone of *Plants vs. Zombies* developed with C++ and EasyX graphics library, for practicing game development and OOP.
+一个使用 C++ 和 EasyX 图形库开发的《植物大战僵尸》基础版本，旨在练习游戏开发与面向对象编程和vibe coding。  
+A basic clone of *Plants vs. Zombies* developed with C++ and EasyX graphics library, for practicing game development and OOP,as well as vibe coding.
 
 ---
 
