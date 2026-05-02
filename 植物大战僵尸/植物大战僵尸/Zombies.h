@@ -122,7 +122,7 @@ private:
 
 
 };
-// Conehead zombie (all instances share the same animation images)
+// 路障僵尸（所有实例共享同一套动画图片）
 class ConeheadZombie : public Zombies {
 public:
     ConeheadZombie(int row, float startX, float startY);

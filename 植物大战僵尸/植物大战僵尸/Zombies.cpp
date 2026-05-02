@@ -13,7 +13,7 @@ int NormalZombie::s_totalFrames = 0;
 int NormalZombie::s_attackTotalFrames = 0;
 bool NormalZombie::s_imagesLoaded = false;
 
-// ---------- ConeheadZombie static members ----------
+// ---------- 路障僵尸静态成员初始化 ----------
 std::vector<IMAGE> ConeheadZombie::s_frames;
 std::vector<IMAGE> ConeheadZombie::attack_frames;
 int ConeheadZombie::s_totalFrames = 0;
@@ -157,7 +157,7 @@ void NormalZombie::sounds()
     audio.playEffect(file);
 }
 
-// ---------- ConeheadZombie: load shared animation images ----------
+// ---------- 路障僵尸：加载共享动画图片 ----------
 void ConeheadZombie::loadSharedImages() {
     if (s_imagesLoaded) return;
 
@@ -184,7 +184,7 @@ void ConeheadZombie::loadSharedImages() {
         printf("Successfully loaded %d ConeheadZombie walking frames.\n", s_totalFrames);
     }
 
-    // Load attack frames
+    // 加载攻击动画帧
     loaded = 0;
     for (int i = 1; i <= 11; ++i) {
         std::wstring path = buildPath(i, L"resource/images/extra/ConeheadZombie_Attack/frame_");
@@ -200,7 +200,7 @@ void ConeheadZombie::loadSharedImages() {
     printf("Successfully loaded %d ConeheadZombie attack frames.\n", s_attackTotalFrames);
 }
 
-// ---------- ConeheadZombie constructor ----------
+// ---------- 路障僵尸构造函数 ----------
 ConeheadZombie::ConeheadZombie(int r, float startX, float startY) {
     row = r;
     worldX = startX;
@@ -216,14 +216,14 @@ ConeheadZombie::ConeheadZombie(int r, float startX, float startY) {
     attackInterval = 0.65f;
     attackDamage = 60;
 
-    // 10% chance to play groan sound
+    // 10%概率播放僵尸叫声
     int probability = rand() % 10;
     if (!probability) {
         sounds();
     }
 }
 
-// ---------- ConeheadZombie update ----------
+// ---------- 路障僵尸更新逻辑 ----------
 void ConeheadZombie::update(float delta) {
     if (!isAttacking) {
         worldX -= speed * delta;
@@ -239,7 +239,7 @@ void ConeheadZombie::update(float delta) {
     }
 }
 
-// ---------- ConeheadZombie draw ----------
+// ---------- 路障僵尸绘制 ----------
 void ConeheadZombie::draw(int screenX, int screenY) {
     const std::vector<IMAGE>& frames = isAttacking ? attack_frames : s_frames;
     int total = (int)frames.size();
@@ -249,22 +249,22 @@ void ConeheadZombie::draw(int screenX, int screenY) {
     }
 }
 
-// ---------- ConeheadZombie takeDamage ----------
+// ---------- 路障僵尸受伤 ----------
 void ConeheadZombie::takeDamage(int damage) {
     hp -= damage;
     if (hp < 0) hp = 0;
 }
 
-// ---------- ConeheadZombie isDead ----------
+// ---------- 路障僵尸死亡判定 ----------
 bool ConeheadZombie::isDead() const {
     return hp <= 0;
 }
 
-// ---------- ConeheadZombie drawDead ----------
+// ---------- 路障僵尸死亡绘制 ----------
 void ConeheadZombie::drawDead() {
 }
 
-// ---------- ConeheadZombie sounds ----------
+// ---------- 路障僵尸音效 ----------
 void ConeheadZombie::sounds() {
     int id = rand() % 6 + 1;
     std::string ID = std::to_string(id);

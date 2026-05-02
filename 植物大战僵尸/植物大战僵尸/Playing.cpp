@@ -50,21 +50,21 @@ void PlayingState::onEnter() {
 
     //读取出怪
     levelData.applyTo(spawn);
-	// ===== Calculate expected zombie composition for preview =====
+	// ===== 计算本关僵尸出场预览 =====
 	{
 		const auto& types = spawn.getSpawnTypes();
 		const auto& weights = spawn.getSpawnWeights();
 
-		// Get cost weight for each zombie type
+		// 获取每种僵尸类型的cost权重
 		auto getCost = [](int type) -> int {
 			switch (type) {
-			case 0: return 10;   // NormalZombie
-			case 1: return 20;   // ConeheadZombie
+			case 0: return 10;   // 普通僵尸
+			case 1: return 20;   // 路障僵尸
 			default: return 10;
 			}
 		};
 
-		// Get preview image path for each zombie type
+		// 获取每种僵尸类型的预览图片路径
 		auto getPreviewPath = [](int type) -> std::wstring {
 			switch (type) {
 			case 0: return L"resource/images/extra/Zombie/frame_0001.png";
@@ -73,7 +73,7 @@ void PlayingState::onEnter() {
 			}
 		};
 
-		// Load preview images for all spawning types (reserve vector to avoid pointer invalidation)
+		// 加载所有出场僵尸类型的预览图片（预分配vector防止指针失效）
 		previewImages.clear();
 		previewZombies.clear();
 		previewImages.reserve(types.size());
@@ -85,13 +85,13 @@ void PlayingState::onEnter() {
 			previewImages.push_back(img);
 		}
 
-		// If no images loaded, skip
+		// 如果没有加载到图片，跳过
 		if (previewImages.empty()) {
 			previewImages.clear();
 		}
 		else {
-			// Calculate expected counts: with uniform random selection,
-			// expected count per type = totalWeight / sum(costs)
+			// 计算每种僵尸的期望数量：均匀随机选择下，期望数 = 总权重 / cost之和
+			//
 			int totalCostSum = 0;
 			for (int t : types) totalCostSum += getCost(t);
 			int totalWeight = 0;
@@ -107,18 +107,18 @@ void PlayingState::onEnter() {
 
 			const int MAX_PREVIEW = 10;
 
-			// Calculate display counts with NormalZombie (type 0) at least 50%
+			// 计算展示数量，普通僵尸（type 0）至少占50%
 			std::map<int, int> displayCounts;
 			int slotsUsed = 0;
 
-			// Step 1: ensure type 0 gets at least ceil(MAX_PREVIEW * 0.5)
+			// 第一步：确保普通僵尸至少占 ceil(MAX_PREVIEW * 0.5) 个槽位
 			if (expectedCount.count(0) && expectedCount[0] > 0) {
 				int minNormal = (int)std::ceil(MAX_PREVIEW * 0.5f);
 				displayCounts[0] = minNormal;
 				slotsUsed += minNormal;
 			}
 
-			// Step 2: ensure every other type gets at least 1
+			// 第二步：确保其他每种僵尸至少1个
 			for (auto& [type, expected] : expectedCount) {
 				if (type == 0) continue;
 				if (slotsUsed >= MAX_PREVIEW) break;
@@ -126,7 +126,7 @@ void PlayingState::onEnter() {
 				slotsUsed++;
 			}
 
-			// Step 3: distribute remaining slots proportionally
+			// 第三步：按比例分配剩余槽位
 			int remaining = MAX_PREVIEW - slotsUsed;
 			if (remaining > 0) {
 				for (auto& [type, expected] : expectedCount) {
@@ -137,10 +137,10 @@ void PlayingState::onEnter() {
 						displayCounts[type] += extra;
 					slotsUsed += extra;
 				}
-				// Adjust if over/under due to rounding
+				// 如果因四舍五入导致溢出或不足，进行调整
 				int diff = slotsUsed - MAX_PREVIEW;
 				if (diff != 0) {
-					// Adjust the largest count (excluding type 0 if it would go below minimum)
+					// 调整数量最多的类型（如果普通僵尸已达最低比例则跳过）
 					int adjustType = 0;
 					int maxCount = 0;
 					for (auto& [type, count] : displayCounts) {
@@ -154,12 +154,12 @@ void PlayingState::onEnter() {
 				}
 			}
 
-			// Create preview zombies in 2-column grid
+			// 按2列网格排列预览僵尸
 			int slotIndex = 0;
 			for (auto& [type, displayCount] : displayCounts) {
 				if (displayCount <= 0) continue;
 
-				// Find image index for this type
+				// 找到该类型对应的图片索引
 				int imgIndex = -1;
 				for (size_t ti = 0; ti < types.size(); ti++) {
 					if (types[ti] == type) { imgIndex = (int)ti; break; }
@@ -168,8 +168,8 @@ void PlayingState::onEnter() {
 
 				for (int i = 0; i < displayCount; i++) {
 					int totalSlot = slotIndex + i;
-					int col = totalSlot % 2;  // left or right column
-					int row = totalSlot / 2;  // row 0~4
+				int col = totalSlot % 2;  // 左列或右列
+				int row = totalSlot / 2;  // 0~4行
 
 					PreviewZombie pz;
 					pz.imgIndex = imgIndex;
@@ -217,6 +217,13 @@ void PlayingState::onEnter() {
     sunflower.plantType = 1;             // 植物类型1
     cards.push_back(sunflower);
 
+	// 加载铲子图片
+	loadimage(&shovelImg, _T("resource/images/interface/Shovel.png"));
+	loadimage(&shovelBackImg, _T("resource/images/interface/ShovelBack.png"));
+
+	// 铲子位置与阳光栏关于屏幕中心对称（屏幕宽900，阳光栏x=10）
+	shovelX = 900 - 10 - shovelBackImg.getwidth();
+	shovelY = 10;
 }
 
 void PlayingState::onExit() {
@@ -237,7 +244,7 @@ void PlayingState::onExit() {
     // 可选：重置其他状态
     currentSun = 150;
     for (auto& c : cards) c.isSelected = false;
-	previewZombies.clear();  // clear preview data
+	previewZombies.clear();  // 清空预览僵尸数据
 	previewImages.clear();
 }
 void PlayingState::handleInput() {
@@ -254,6 +261,7 @@ void PlayingState::handleInput() {
         if (msg.message == WM_RBUTTONDOWN)
         {
             for (auto& c : cards) c.isSelected = false;
+	shovelSelected = false;
             printf("Right click: cleared selection\n");
         }
         // 处理鼠标
@@ -294,6 +302,50 @@ void PlayingState::handleInput() {
 
 
 
+
+			// 检查是否点击了铲子
+			if (scrollState == 5) {
+				int shovelRight = shovelX + shovelBackImg.getwidth();
+				int shovelBottom = shovelY + shovelBackImg.getheight();
+				if (msg.x >= shovelX && msg.x <= shovelRight &&
+				    msg.y >= shovelY && msg.y <= shovelBottom) {
+					// 取消所有卡片选中，选中铲子
+					for (auto& c : cards) c.isSelected = false;
+					shovelSelected = true;
+					 audio.playEffect("shovel.mp3");  // TODO: 确认音效文件存在后取消注释
+					continue;  // 跳过后续处理
+				}
+			}
+
+			// 如果铲子已选中，点击草坪则铲除植物
+			if (shovelSelected && scrollState == 5) {
+				int screenX = msg.x;
+				int screenY = msg.y;
+				int worldX = screenX + (int)cameraX;
+				int worldY = screenY;
+				int col = (worldX - GRID_WORLD_X) / CELL_W;
+				int row = (worldY - GRID_WORLD_Y) / CELL_H;
+				if (col >= 0 && col < GRID_COLS && row >= 0 && row < GRID_ROWS) {
+					Plants* plant = gridPlants[row][col];
+					if (plant != nullptr && !plant->isDead()) {
+						// 从网格和列表中移除植物
+						gridPlants[row][col] = nullptr;
+						for (auto it = plantsList.begin(); it != plantsList.end(); ++it) {
+							if (it->get() == plant) {
+								plantsList.erase(it);
+								break;
+							}
+						}
+					 audio.playEffect("plant2.mp3");  // TODO: 确认音效文件存在后取消注释
+						shovelSelected = false;  // 铲完后取消选中
+					}
+					else {
+						// 点击了空地，也取消铲子选中
+						shovelSelected = false;
+					}
+				}
+				continue;  // 跳过种植逻辑
+			}
 
             bool hitCard = false;
             // 先检查是否点击了卡片
@@ -637,7 +689,7 @@ void PlayingState::render() {
             break;
         }
     }
-	// Draw preview zombies during intro camera scroll
+	// 绘制预览僵尸（开场镜头滚动时）
 	if ((scrollState >= 1 && scrollState <= 3) && !previewZombies.empty()) {
 		for (auto& pz : previewZombies) {
 			int screenX = (int)(pz.worldX - cameraX);
@@ -645,6 +697,24 @@ void PlayingState::render() {
 			putimagePng(screenX, screenY, &previewImages[pz.imgIndex], 0, 0, previewImages[pz.imgIndex].getwidth(), previewImages[pz.imgIndex].getheight());
 		}
 	}
+
+	// 绘制铲子
+	if (scrollState >= 4) {
+		putimagePng(shovelX, shovelY, &shovelBackImg, 0, 0, shovelBackImg.getwidth(), shovelBackImg.getheight());
+		if (shovelSelected) {
+			// 铲子跟随鼠标
+			POINT pt;
+			GetCursorPos(&pt);
+			ScreenToClient(GetHWnd(), &pt);
+			int sw = shovelImg.getwidth();
+			int sh = shovelImg.getheight();
+			putimagePng(pt.x - sw / 2, pt.y - sh / 2, &shovelImg, 0, 0, sw, sh);
+		}
+		else {
+			putimagePng(shovelX, shovelY, &shovelImg, 0, 0, shovelImg.getwidth(), shovelImg.getheight());
+		}
+	}
+
     // 绘制所有植物
     for (auto& plantPtr : plantsList) {
         int screenX = GRID_WORLD_X + plantPtr->col * CELL_W - (int)cameraX;

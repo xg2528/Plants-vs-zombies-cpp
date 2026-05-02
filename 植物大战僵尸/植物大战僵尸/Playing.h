@@ -43,12 +43,20 @@ private:
     Spawn spawn;  // 出怪管理器
     LevelData levelData;
     std::vector<std::unique_ptr<Bullet>> bullets;  // 子弹列表（放在其他容器附近）
-	// Preview zombies: shown on the right side during intro camera scroll
+	// 预览僵尸：开场镜头滚动时在右侧展示
 	struct PreviewZombie {
-			int imgIndex;  // index into previewImages
+    public:
+	    int imgIndex;  // index into previewImages
 		float worldX;
 		float worldY;
 	};
 	std::vector<IMAGE> previewImages;  // owns loaded preview images
 	std::vector<PreviewZombie> previewZombies;
+
+	// 锲子
+	IMAGE shovelImg;
+	IMAGE shovelBackImg;
+	bool shovelSelected = false;
+	int shovelX = 500;
+	int shovelY = 10;
 };
