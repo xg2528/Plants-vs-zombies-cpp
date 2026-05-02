@@ -14,7 +14,7 @@ Game game;
 int main() {
   
     initgraph(WIDTH, HEIGHT, EX_SHOWCONSOLE);
-    srand((unsigned)time(nullptr));//初始化随机数
+    srand((unsigned)time(nullptr));//鍒濆鍖栭殢鏈烘暟
     audio.loadAllEffects("resource/audio");
         game.run();
         return 0;

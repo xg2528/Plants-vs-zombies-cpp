@@ -6,22 +6,22 @@ extern void putimagePng(int img_x, int img_y, const IMAGE* pSrcImg, int srcX, in
 
 Bullet::Bullet(float worldX, float worldY, int row, int damage, float speed)
     : worldX(worldX), worldY(worldY), row(row), damage(damage), speed(speed),
-    active(true), canHit(false), lifeTimer(0.05f)   // 0.05 ÃëÎŞµĞÊ±¼ä
+    active(true), canHit(false), lifeTimer(0.05f)   // 0.05 ç§’æ— æ•Œæ—¶é—´
 {
 }
 
 bool Bullet::update(float delta) {
     if (!active) return false;
-    // ÒÆ¶¯
+    // ç§»åŠ¨
     worldX += speed * delta;
-    // ³öÉú±£»¤¼ÆÊ±
+    // å‡ºç”Ÿä¿æŠ¤è®¡æ—¶
     if (lifeTimer > 0.0f) {
         lifeTimer -= delta;
         if (lifeTimer <= 0.0f) {
             canHit = true;
         }
     }
-    // ³¬³ö±ß½ç£¨ÀıÈçÊÀ½ç×ø±ê > 1600£©ÔòÊ§Ğ§
+    // è¶…å‡ºè¾¹ç•Œï¼ˆä¾‹å¦‚ä¸–ç•Œåæ ‡ > 1600ï¼‰åˆ™å¤±æ•ˆ
     if (worldX > 1600.0f) {
         active = false;
     }
@@ -32,9 +32,9 @@ void Bullet::draw(int cameraX) const {
     if (!active) return;
     int screenX = (int)(worldX - cameraX);
     int screenY = (int)worldY;
-    // Èç¹ûÍ¼Æ¬ÓĞĞ§Ôò»æÖÆ£¬·ñÔò»æÖÆÒ»¸ö¾ØĞÎµ÷ÊÔ
+    // å¦‚æœå›¾ç‰‡æœ‰æ•ˆåˆ™ç»˜åˆ¶ï¼Œå¦åˆ™ç»˜åˆ¶ä¸€ä¸ªçŸ©å½¢è°ƒè¯•
     if (img.getwidth() > 0 && img.getheight() > 0) {
-        putimagePng(screenX, screenY-22, &img, 0, 0, img.getwidth(), img.getheight());//¼õ22¶ÔÆë
+        putimagePng(screenX, screenY-22, &img, 0, 0, img.getwidth(), img.getheight());//å‡22å¯¹é½
     }
    
 }
