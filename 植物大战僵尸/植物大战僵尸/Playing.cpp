@@ -217,6 +217,20 @@ void PlayingState::onEnter() {
     sunflower.plantType = 1;             // 植物类型1
     cards.push_back(sunflower);
 
+	// Repeater card
+	Card repeater;
+	loadimage(&repeater.img, _T("resource/images/Card/Plants/Repeater.png"));
+	loadimage(&repeater.plantImg, _T("resource/images/Plants/Repeater/frame_0001.png"));
+	repeater.x = 400;
+	repeater.y = 10;
+	repeater.cost = 200;
+	repeater.totalCoolTime = 7500.0f;
+	repeater.plantType = 2;
+	repeater.isSelected = false;
+	repeater.isCooling = false;
+	repeater.coolingRemain = 0;
+	cards.push_back(repeater);
+
 	// 加载铲子图片
 	loadimage(&shovelImg, _T("resource/images/interface/Shovel.png"));
 	loadimage(&shovelBackImg, _T("resource/images/interface/ShovelBack.png"));
@@ -362,7 +376,7 @@ void PlayingState::handleInput() {
                     msg.y >= card.y && msg.y <= cardBottom && scrollState == 5) {
                     // 取消所有卡片的选中状态
                     for (auto& c : cards) c.isSelected = false;
-                    if (!card.isCooling)
+                    if (!card.isCooling && currentSun >= card.cost)
                     {
                         cards[i].isSelected = true;
                         audio.playEffect("seedlift.mp3");
@@ -407,6 +421,9 @@ void PlayingState::handleInput() {
                                 }
                                 else if (card.plantType == 1) {
                                     plant = new Sunflower(row, col);
+                                }
+                                else if (card.plantType == 2) { // Repeater
+                                    plant = new Repeater(row, col);
                                 }
                                 // 其他类型后续添加
                                 if (plant) {
@@ -548,6 +565,7 @@ void PlayingState::update() {
 
     }
 
+	if (scrollState == 5) {
 
      spawn.update(delta);  // 更新出怪计时器，生成新僵尸
     // 更新所有僵尸（通过 spawn.getZombies()）
@@ -582,6 +600,9 @@ void PlayingState::update() {
         case 0:
             plantPtr->attack(delta, spawn.getZombies());
             break;
+	        case 2:
+	            plantPtr->attack(delta, spawn.getZombies());
+	            break;
 
 
         }
@@ -613,6 +634,7 @@ void PlayingState::update() {
     }
     //游戏失败检测
     checkWin(spawn.getZombies());
+	}
 
 
 
@@ -652,6 +674,14 @@ void PlayingState::render() {
         // 绘制卡片上半部分（正常状态）
         int OffestY = card.isCooling || card.isSelected ? cardH : 0;
         putimagePng(card.x, card.y, &card.img, 0, OffestY, card.img.getwidth(), cardH);
+
+		// 阳光不足时绘制灰色遮罩
+		if (currentSun < card.cost && !card.isCooling && !card.isSelected) {
+			setfillstyle(BS_HATCHED, HS_BDIAGONAL);
+			setfillcolor(RGB(100, 100, 100));
+			solidrectangle(card.x, card.y, card.x + card.img.getwidth(), card.y + cardH);
+			setfillstyle(BS_SOLID);
+		}
         // 如果有高亮等，继续添加
 
 		// 绘制冷却时间（如果正在冷却）

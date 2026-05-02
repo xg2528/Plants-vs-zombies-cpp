@@ -86,4 +86,31 @@ private:
 	static const int PRODUCE_OFFSET = 0;          // 生产状态下源Y偏移（下半部分）
 	// 实际使用时，图片高度的一半作为偏移
 	int currentInterval;
+
+};
+
+class Repeater : public Plants {
+public:
+	void setHp(int hp)override { m_hp = hp; };
+	void loadImgs()override;
+	Repeater() : Plants(15), shootTimer(0.0f), shootInterval(1.8f), secondPeaTimer(-1.0f), fireSecondPea(false), currentFrame(0), animTimer(0.0f) {
+		loadImgs();
+	}
+	void update(float delta)override;
+	void draw(int x, int y) override;
+	void attack(float delta, const std::vector<std::unique_ptr<Zombies>>& zombies)override;
+	Repeater(int r, int c);
+	void takeDamage(int damage)override {
+		m_hp -= damage;
+		if (m_hp <= 0) m_hp = 0;
+	}
+	bool isDead()const override { return m_hp <= 0; }
+private:
+	float shootTimer;
+	float shootInterval;
+	float secondPeaTimer;   // delay before second pea, -1 = inactive
+	bool fireSecondPea;     // true when second pea ready to fire
+	int currentFrame;
+	float animTimer;
+	float animInterval;
 };
