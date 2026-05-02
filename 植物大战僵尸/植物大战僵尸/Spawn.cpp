@@ -35,7 +35,7 @@ void Spawn::update(float delta) {
             // 根据类型确定分数（此处硬编码，可根据需要修改）
             switch (type) {
             case 0: cost = 10; break;      // 普通僵尸
-            case 1: cost = 20; break;      // 旗帜僵尸
+	            case 1: cost = 20; break;      // ConeheadZombie
                 // 其他类型...
             default: cost = 10; break;
             }
@@ -56,7 +56,7 @@ void Spawn::update(float delta) {
                 break;
             }
             case 1: // 旗帜僵尸或其他类型
-                // spawnFinal.push_back(std::make_unique<FlagZombie>());
+	                spawnFinal.push_back(std::make_unique<ConeheadZombie>(row, startX, startY));
                 break;
                 // 其他类型...
             }

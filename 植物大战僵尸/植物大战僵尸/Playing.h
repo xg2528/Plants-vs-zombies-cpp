@@ -45,7 +45,7 @@ private:
     std::vector<std::unique_ptr<Bullet>> bullets;  // 子弹列表（放在其他容器附近）
 	// Preview zombies: shown on the right side during intro camera scroll
 	struct PreviewZombie {
-		IMAGE* img;  // pointer to image in previewImages
+			int imgIndex;  // index into previewImages
 		float worldX;
 		float worldY;
 	};

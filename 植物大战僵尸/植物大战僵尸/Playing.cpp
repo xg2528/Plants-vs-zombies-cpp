@@ -59,7 +59,7 @@ void PlayingState::onEnter() {
 		auto getCost = [](int type) -> int {
 			switch (type) {
 			case 0: return 10;   // NormalZombie
-			case 1: return 20;   // FlagZombie
+			case 1: return 20;   // ConeheadZombie
 			default: return 10;
 			}
 		};
@@ -68,59 +68,117 @@ void PlayingState::onEnter() {
 		auto getPreviewPath = [](int type) -> std::wstring {
 			switch (type) {
 			case 0: return L"resource/images/extra/Zombie/frame_0001.png";
-			case 1: return L"resource/images/Card/Zombies/FlagZombie.png";
+			case 1: return L"resource/images/extra/ConeheadZombie/frame_0001.png";
 			default: return L"";
 			}
 		};
 
-		// Calculate expected spawn count for each type
-		// With uniform random selection: expected = totalWeight / sum(costs)
-		int totalCostSum = 0;
-		for (int t : types) totalCostSum += getCost(t);
-		int totalWeight = 0;
-		for (int w : weights) totalWeight += w;
-
-		std::map<int, float> expectedCount;
-		for (int t : types) {
-			expectedCount[t] = (float)totalWeight / totalCostSum;
-		}
-
-		// Scale to preview slots (max 10) proportionally
-		const int MAX_PREVIEW = 10;
-		float totalExpected = 0;
-		for (auto& p : expectedCount) totalExpected += p.second;
-
+		// Load preview images for all spawning types (reserve vector to avoid pointer invalidation)
 		previewImages.clear();
 		previewZombies.clear();
-		int slotIndex = 0;
-
-		for (auto& [type, expected] : expectedCount) {
-			int displayCount = (int)(std::max)(1.0f, std::round(expected / totalExpected * MAX_PREVIEW));
-			if (slotIndex + displayCount > MAX_PREVIEW)
-				displayCount = MAX_PREVIEW - slotIndex;
-			if (displayCount <= 0) break;
-
-			// Load preview image for this zombie type
+		previewImages.reserve(types.size());
+		for (int t : types) {
 			IMAGE img;
-			std::wstring path = getPreviewPath(type);
+			std::wstring path = getPreviewPath(t);
 			if (path.empty()) continue;
-			if (loadimage(&img, path.c_str()) != 0) continue;
+			loadimage(&img, path.c_str());
 			previewImages.push_back(img);
-			IMAGE* imgPtr = &previewImages.back();
+		}
 
-			// Arrange in 2-column grid on the right side of the lawn
-			for (int i = 0; i < displayCount; i++) {
-				int totalSlot = slotIndex + i;
-				int col = totalSlot % 2;  // left or right column
-				int row = totalSlot / 2;  // row 0~4
+		// If no images loaded, skip
+		if (previewImages.empty()) {
+			previewImages.clear();
+		}
+		else {
+			// Calculate expected counts: with uniform random selection,
+			// expected count per type = totalWeight / sum(costs)
+			int totalCostSum = 0;
+			for (int t : types) totalCostSum += getCost(t);
+			int totalWeight = 0;
+			for (int w : weights) totalWeight += w;
 
-				PreviewZombie pz;
-				pz.img = imgPtr;
-				pz.worldX = (float)(GRID_WORLD_X + GRID_COLS * CELL_W + 60 + col * 110);
-				pz.worldY = GRID_WORLD_Y + row * CELL_H + (CELL_H - img.getheight()) / 2 - 10;
-				previewZombies.push_back(pz);
+			std::map<int, float> expectedCount;
+			for (int t : types) {
+				expectedCount[t] = (float)totalWeight / totalCostSum;
 			}
-			slotIndex += displayCount;
+
+			float totalExpected = 0;
+			for (auto& p : expectedCount) totalExpected += p.second;
+
+			const int MAX_PREVIEW = 10;
+
+			// Calculate display counts with NormalZombie (type 0) at least 50%
+			std::map<int, int> displayCounts;
+			int slotsUsed = 0;
+
+			// Step 1: ensure type 0 gets at least ceil(MAX_PREVIEW * 0.5)
+			if (expectedCount.count(0) && expectedCount[0] > 0) {
+				int minNormal = (int)std::ceil(MAX_PREVIEW * 0.5f);
+				displayCounts[0] = minNormal;
+				slotsUsed += minNormal;
+			}
+
+			// Step 2: ensure every other type gets at least 1
+			for (auto& [type, expected] : expectedCount) {
+				if (type == 0) continue;
+				if (slotsUsed >= MAX_PREVIEW) break;
+				displayCounts[type] = 1;
+				slotsUsed++;
+			}
+
+			// Step 3: distribute remaining slots proportionally
+			int remaining = MAX_PREVIEW - slotsUsed;
+			if (remaining > 0) {
+				for (auto& [type, expected] : expectedCount) {
+					int extra = (int)std::round(expected / totalExpected * remaining);
+					if (displayCounts.find(type) == displayCounts.end())
+						displayCounts[type] = extra;
+					else
+						displayCounts[type] += extra;
+					slotsUsed += extra;
+				}
+				// Adjust if over/under due to rounding
+				int diff = slotsUsed - MAX_PREVIEW;
+				if (diff != 0) {
+					// Adjust the largest count (excluding type 0 if it would go below minimum)
+					int adjustType = 0;
+					int maxCount = 0;
+					for (auto& [type, count] : displayCounts) {
+						if (count > maxCount && (type != 0 || count > (int)std::ceil(MAX_PREVIEW * 0.5f))) {
+							maxCount = count;
+							adjustType = type;
+						}
+					}
+					if (adjustType >= 0 && displayCounts.count(adjustType))
+						displayCounts[adjustType] = (std::max)(1, displayCounts[adjustType] - diff);
+				}
+			}
+
+			// Create preview zombies in 2-column grid
+			int slotIndex = 0;
+			for (auto& [type, displayCount] : displayCounts) {
+				if (displayCount <= 0) continue;
+
+				// Find image index for this type
+				int imgIndex = -1;
+				for (size_t ti = 0; ti < types.size(); ti++) {
+					if (types[ti] == type) { imgIndex = (int)ti; break; }
+				}
+				if (imgIndex < 0 || imgIndex >= (int)previewImages.size()) continue;
+
+				for (int i = 0; i < displayCount; i++) {
+					int totalSlot = slotIndex + i;
+					int col = totalSlot % 2;  // left or right column
+					int row = totalSlot / 2;  // row 0~4
+
+					PreviewZombie pz;
+					pz.imgIndex = imgIndex;
+					pz.worldX = (float)(GRID_WORLD_X + GRID_COLS * CELL_W + 60 + col * 110);
+					pz.worldY = GRID_WORLD_Y + row * CELL_H + (CELL_H - previewImages[imgIndex].getheight()) / 2 - 10;
+					previewZombies.push_back(pz);
+				}
+				slotIndex += displayCount;
+			}
 		}
 	}
 
@@ -128,6 +186,7 @@ void PlayingState::onEnter() {
 
     //加载普通僵尸
     NormalZombie::loadSharedImages();
+    ConeheadZombie::loadSharedImages();
 
 
 
@@ -583,7 +642,7 @@ void PlayingState::render() {
 		for (auto& pz : previewZombies) {
 			int screenX = (int)(pz.worldX - cameraX);
 			int screenY = (int)pz.worldY;
-			putimagePng(screenX, screenY, pz.img, 0, 0, pz.img->getwidth(), pz.img->getheight());
+			putimagePng(screenX, screenY, &previewImages[pz.imgIndex], 0, 0, previewImages[pz.imgIndex].getwidth(), previewImages[pz.imgIndex].getheight());
 		}
 	}
     // 绘制所有植物

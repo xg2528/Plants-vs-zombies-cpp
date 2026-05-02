@@ -120,4 +120,29 @@ private:
 
   
 
+
+};
+// Conehead zombie (all instances share the same animation images)
+class ConeheadZombie : public Zombies {
+public:
+    ConeheadZombie(int row, float startX, float startY);
+    void update(float delta) override;
+    void draw(int screenX, int screenY) override;
+    void takeDamage(int damage) override;
+    bool isDead() const override;
+    void drawDead() override;
+    void sounds();
+
+    static void loadSharedImages();
+
+private:
+    float speed;
+    static const int WIDTH = 166;
+    static const int HEIGHT = 144;
+
+    static std::vector<IMAGE> s_frames;
+    static std::vector<IMAGE> attack_frames;
+    static int s_totalFrames;
+    static int s_attackTotalFrames;
+    static bool s_imagesLoaded;
 };
