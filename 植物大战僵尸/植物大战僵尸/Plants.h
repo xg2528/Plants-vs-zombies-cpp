@@ -113,4 +113,26 @@ private:
 	int currentFrame;
 	float animTimer;
 	float animInterval;
+
+};
+class WallNut : public Plants {
+public:
+	void setHp(int hp)override { m_hp = hp; };
+	void loadImgs()override;
+	WallNut() : Plants(16), currentFrame(0), animTimer(0.0f), animInterval(0.1f) { loadImgs(); }
+	void update(float delta)override;
+	void draw(int x, int y) override;
+	void attack(float delta, const std::vector<std::unique_ptr<Zombies>>& zombies)override {}
+	WallNut(int r, int c);
+	void takeDamage(int damage)override { m_hp -= damage; if (m_hp <= 0) m_hp = 0; }
+	bool isDead()const override { return m_hp <= 0; }
+private:
+	int currentFrame;
+	float animTimer;
+	float animInterval;
+	std::vector<IMAGE> wallNut0_imgs;
+	std::vector<IMAGE> wallNut1_imgs;
+	std::vector<IMAGE> wallNut2_imgs;
+	int currentStage;  // 0=full, 1=damaged, 2=critical
+	void updateStage();
 };

@@ -231,6 +231,20 @@ void PlayingState::onEnter() {
 	repeater.coolingRemain = 0;
 	cards.push_back(repeater);
 
+	// WallNut card
+	Card wallnut;
+	loadimage(&wallnut.img, _T("resource/images/Card/Plants/WallNut.png"));
+	loadimage(&wallnut.plantImg, _T("resource/images/Plants/WallNut/WallNut0/frame_0001.png"));
+	wallnut.x = 500;
+	wallnut.y = 10;
+	wallnut.cost = 50;
+	wallnut.totalCoolTime = 20000.0f;
+	wallnut.plantType = 3;
+	wallnut.isSelected = false;
+	wallnut.isCooling = false;
+	wallnut.coolingRemain = 0;
+	cards.push_back(wallnut);
+
 	// 加载铲子图片
 	loadimage(&shovelImg, _T("resource/images/interface/Shovel.png"));
 	loadimage(&shovelBackImg, _T("resource/images/interface/ShovelBack.png"));
@@ -425,6 +439,9 @@ void PlayingState::handleInput() {
                                 else if (card.plantType == 2) { // Repeater
                                     plant = new Repeater(row, col);
                                 }
+                                else if (card.plantType == 3) { // WallNut
+                                    plant = new WallNut(row, col);
+                                }
                                 // 其他类型后续添加
                                 if (plant) {
                                     gridPlants[row][col] = plant;
@@ -574,8 +591,15 @@ void PlayingState::update() {
     }
     // 移除死亡僵尸（放在攻击之前）
     auto& zombies = spawn.getZombies();
-    zombies.erase(std::remove_if(zombies.begin(), zombies.end(),
-        [](const std::unique_ptr<Zombies>& z) { return z->isDead(); }), zombies.end());
+    // swap-and-pop dead zombies O(n)
+    for (size_t zi = 0; zi < zombies.size(); ) {
+        if (zombies[zi]->isDead()) {
+            std::swap(zombies[zi], zombies.back());
+            zombies.pop_back();
+        } else {
+            ++zi;
+        }
+    }
     //移除死亡植物
     // 手动遍历以确保同时清理 gridPlants
     auto it = plantsList.begin();
@@ -798,26 +822,26 @@ void PlayingState::render() {
 }
 
 
-// 子弹与僵尸碰撞检测
+// bullet-zombie collision (row-bucketed)
 void checkBulletCollision(std::vector<std::unique_ptr<Zombies>>& zombies) {
+    std::vector<Zombies*> rowBuckets[5];
+    for (auto& z : zombies)
+        if (!z->isDead() && z->row >= 0 && z->row < 5)
+            rowBuckets[z->row].push_back(z.get());
     for (auto it = g_bullets.begin(); it != g_bullets.end(); ) {
         Bullet* bullet = it->get();
-        if (!bullet->isActive() || !bullet->canHit) {
-            ++it;
-            continue;
-        }
+        if (!bullet->isActive() || !bullet->canHit) { ++it; continue; }
         bool hit = false;
-        for (auto& zombie : zombies) {
-            if (zombie->isDead()) continue;
-            if (bullet->getRow() != zombie->row) continue;
-            float zombieLeft = zombie->worldX;
-            float bulletRight = bullet->getWorldX();
-            // 简单碰撞：子弹进入僵尸大约一半矩形范围
-            if (bulletRight > zombieLeft + 20 && bulletRight < zombieLeft + 60) {
-                zombie->takeDamage(bullet->getDamage());
-                hit = true;
-                audio.playEffect("splat1.mp3");
-                break;
+        int bulletRow = bullet->getRow();
+        if (bulletRow >= 0 && bulletRow < 5) {
+            for (auto* zombie : rowBuckets[bulletRow]) {
+                if (bullet->getWorldX() > zombie->worldX + 20 &&
+                    bullet->getWorldX() < zombie->worldX + 60) {
+                    zombie->takeDamage(bullet->getDamage());
+                    hit = true;
+                    audio.playEffect("splat1.mp3");
+                    break;
+                }
             }
         }
         if (hit) it = g_bullets.erase(it);

@@ -81,6 +81,9 @@
     <ClCompile Include="Repeater.cpp">
       <Filter>源文件\Plants</Filter>
     </ClCompile>
+    <ClCompile Include="WallNut.cpp">
+      <Filter>源文件\Plants</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GameState.h">

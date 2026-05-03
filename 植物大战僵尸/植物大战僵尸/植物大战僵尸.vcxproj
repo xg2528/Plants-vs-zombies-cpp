@@ -155,6 +155,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="WallNut.cpp" />
     <ClCompile Include="Spawn.cpp" />
     <ClCompile Include="Sun.cpp" />
     <ClCompile Include="Sunflower.cpp" />
