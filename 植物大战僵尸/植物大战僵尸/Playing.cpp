@@ -60,6 +60,7 @@ void PlayingState::onEnter() {
 			switch (type) {
 			case 0: return 10;   // 普通僵尸
 			case 1: return 20;   // 路障僵尸
+			case 3: return 50;   // 橄榄球僵尸
 			default: return 10;
 			}
 		};
@@ -69,6 +70,7 @@ void PlayingState::onEnter() {
 			switch (type) {
 			case 0: return L"resource/images/extra/Zombie/frame_0001.png";
 			case 1: return L"resource/images/extra/ConeheadZombie/frame_0001.png";
+			case 3: return L"resource/images/Zombies/FootballZombie/0.gif";
 			default: return L"";
 			}
 		};
@@ -187,6 +189,7 @@ void PlayingState::onEnter() {
     //加载普通僵尸
     NormalZombie::loadSharedImages();
     ConeheadZombie::loadSharedImages();
+	FootballZombie::loadSharedImages();
 
 
 
@@ -799,14 +802,6 @@ void PlayingState::render() {
         }
     }
     //绘制阳光testing
-    for (const auto& sun : suns)
-    {
-      
-        sun.draw((int)cameraX);
-    }
-
-
-
     // O(n) row-bucketed draw (no sort needed)
     auto& zombies = spawn.getZombies();
     if (!zombies.empty()) {
@@ -819,6 +814,14 @@ void PlayingState::render() {
             }
         }
     }
+    for (const auto& sun : suns)
+    {
+      
+        sun.draw((int)cameraX);
+    }
+
+
+
 
     for (auto& bullet : g_bullets) {
         bullet->draw((int)cameraX);
@@ -830,7 +833,7 @@ void PlayingState::render() {
 void checkBulletCollision(std::vector<std::unique_ptr<Zombies>>& zombies) {
     std::vector<Zombies*> rowBuckets[5];
     for (auto& z : zombies)
-        if (!z->isDead() && z->row >= 0 && z->row < 5)
+            if (!z->isDead() && !z->isDying() && z->row >= 0 && z->row < 5)
             rowBuckets[z->row].push_back(z.get());
     for (auto it = g_bullets.begin(); it != g_bullets.end(); ) {
         Bullet* bullet = it->get();
@@ -857,8 +860,9 @@ void checkPlantCollision(std::vector<std::unique_ptr<Zombies>>& zombies,
     Plants* gridPlants[GRID_ROWS][GRID_COLS],
     float delta) {
     for (auto& zombie : zombies) {
+        if (zombie->isDying()) continue;
         // 计算僵尸当前所在列（基于世界坐标，取整）
-        int col = (int)((zombie->worldX + ZOMBIE_COLLIDE_OFFSET - GRID_WORLD_X) / CELL_W);
+        int col = (int)((zombie->worldX + zombie->getCollideOffset() - GRID_WORLD_X) / CELL_W);
         if (col < 0 || col >= GRID_COLS) {
             zombie->isAttacking = false;
             continue;
@@ -893,6 +897,7 @@ void checkWin(std::vector<std::unique_ptr<Zombies>>& zombies) {
     if (gameLost) return;
 
     for (auto& zom : zombies) {
+        if (zom->isDying()) continue;
         // 阈值根据实际场景调整
         if (zom->worldX < GRID_WORLD_X - (CELL_W *3)/2) {
             gameLost = true;

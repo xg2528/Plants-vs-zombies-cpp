@@ -23,6 +23,8 @@ public:
     virtual bool isDead() const = 0;
 
     virtual void drawDead()=0;
+	virtual bool isDying() const { return false; }
+	virtual int getCollideOffset() const { return 130; }
 
 
 
@@ -145,4 +147,35 @@ private:
     static int s_totalFrames;
     static int s_attackTotalFrames;
     static bool s_imagesLoaded;
+};
+// Football Zombie (helmet, multi-stage, death animation)
+class FootballZombie : public Zombies {
+public:
+	FootballZombie(int row, float startX, float startY);
+	void update(float delta) override;
+	void draw(int screenX, int screenY) override;
+	void takeDamage(int damage) override;
+	bool isDead() const override;
+	bool isDying() const override { return dying; }
+	int getCollideOffset() const override { return 110; }
+	void drawDead() override;
+	void sounds();
+	static void loadSharedImages();
+private:
+	float speed;
+	int stage;          // 0=normal, 1=helmLost, 2=headLost, 3=dying
+	bool dying;
+	float deathTimer;
+	int deathFrame;
+	static const int HELMET_LOST_HP = 960;
+	static const int HEAD_LOST_HP = 60;
+	static const int MAX_HP = 1860;
+	static std::vector<IMAGE> s_walk;
+	static std::vector<IMAGE> s_attack;
+	static std::vector<IMAGE> s_ornlost_walk;
+	static std::vector<IMAGE> s_ornlost_attack;
+	static std::vector<IMAGE> s_losthead_walk;
+	static std::vector<IMAGE> s_losthead_attack;
+	static std::vector<IMAGE> s_die;
+	static bool s_imagesLoaded;
 };

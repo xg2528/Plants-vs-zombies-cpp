@@ -69,5 +69,11 @@ void LevelData::createDefaultFile() {
 void LevelData::applyTo(Spawn& spawn) {
     spawn.setSpawnWave(waveCount);
     spawn.setSpawnType(types);
+    // 权重向上取整到10的倍数
+    for (int& w : weights) {
+        if (w % 10 != 0) {
+            w = ((w / 10) + 1) * 10;
+        }
+    }
     spawn.setSpawnWeight(weights);
 }
