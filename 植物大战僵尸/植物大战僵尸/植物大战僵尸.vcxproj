@@ -156,6 +156,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="WallNut.cpp" />
+    <ClCompile Include="LevelMeter.cpp" />
     <ClCompile Include="Spawn.cpp" />
     <ClCompile Include="Sun.cpp" />
     <ClCompile Include="Sunflower.cpp" />
@@ -170,6 +171,7 @@
     <ClInclude Include="Game.h" />
     <ClInclude Include="GameState.h" />
     <ClInclude Include="LevelData.h" />
+    <ClInclude Include="LevelMeter.h" />
     <ClInclude Include="Menu.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Plants.h" />

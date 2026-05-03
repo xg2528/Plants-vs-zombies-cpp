@@ -7,6 +7,7 @@
 #include "Spawn.h"
 #include<chrono>
 #include"LevelData.h"
+#include"LevelMeter.h"
 #include "Bullet.h"   // 需要包含子弹基类头文件（如果尚未包含）
 #include <algorithm>  // 用于 remove_if
 
@@ -59,4 +60,5 @@ private:
 	bool shovelSelected = false;
 	int shovelX = 500;
 	int shovelY = 10;
+	LevelMeter levelMeter;
 };

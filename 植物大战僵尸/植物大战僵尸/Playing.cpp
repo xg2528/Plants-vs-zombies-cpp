@@ -252,6 +252,7 @@ void PlayingState::onEnter() {
 	// 铲子位置与阳光栏关于屏幕中心对称（屏幕宽900，阳光栏x=10）
 	shovelX = 900 - 10 - shovelBackImg.getwidth();
 	shovelY = 10;
+	levelMeter.loadImages();
 }
 
 void PlayingState::onExit() {
@@ -584,6 +585,7 @@ void PlayingState::update() {
 
 	if (scrollState == 5) {
 
+	levelMeter.update(spawn.currentWave, spawn.getWave());
      spawn.update(delta);  // 更新出怪计时器，生成新僵尸
     // 更新所有僵尸（通过 spawn.getZombies()）
     for (auto& zombie : spawn.getZombies()) {
@@ -639,8 +641,15 @@ void PlayingState::update() {
         bullet->update(delta);
     }
     // 移除超出边界的子弹
-    g_bullets.erase(std::remove_if(g_bullets.begin(), g_bullets.end(),
-        [](const std::unique_ptr<Bullet>& b) { return !b->isActive(); }), g_bullets.end());
+    // swap-and-pop dead bullets O(n)
+    for (size_t bi = 0; bi < g_bullets.size(); ) {
+        if (!g_bullets[bi]->isActive()) {
+            std::swap(g_bullets[bi], g_bullets.back());
+            g_bullets.pop_back();
+        } else {
+            ++bi;
+        }
+    }
 
     // 子弹与僵尸碰撞检测
     checkBulletCollision(spawn.getZombies());
@@ -743,6 +752,11 @@ void PlayingState::render() {
             break;
         }
     }
+	// 绘制关卡进度条
+	if (scrollState >= 4) {
+		levelMeter.draw();
+	}
+
 	// 绘制预览僵尸（开场镜头滚动时）
 	if ((scrollState >= 1 && scrollState <= 3) && !previewZombies.empty()) {
 		for (auto& pz : previewZombies) {
@@ -793,28 +807,18 @@ void PlayingState::render() {
 
 
 
-    // 绘制僵尸（按行号升序排序，使下面行的僵尸后绘制，从而遮挡上面行的僵尸）
+    // O(n) row-bucketed draw (no sort needed)
     auto& zombies = spawn.getZombies();
     if (!zombies.empty()) {
-        std::vector<Zombies*> sorted;
-        sorted.reserve(zombies.size());
-        for (auto& z : zombies) sorted.push_back(z.get());
-        std::sort(sorted.begin(), sorted.end(),
-            [](const Zombies* a, const Zombies* b) { return a->row < b->row; });
-        for (Zombies* zombie : sorted) {
-            int screenX = (int)(zombie->worldX - cameraX);
-            int screenY = (int)zombie->worldY;
-            if (!zombie->isDead())
-            {
-                zombie->draw(screenX, screenY);
-            }
-            else {
-
-                zombie->drawDead();
+        for (int r = 0; r < 5; ++r) {
+            for (auto& z : zombies) {
+                if (z->row != r) continue;
+                int screenX = (int)(z->worldX - cameraX);
+                int screenY = (int)z->worldY;
+                z->draw(screenX, screenY);
             }
         }
     }
-
 
     for (auto& bullet : g_bullets) {
         bullet->draw((int)cameraX);
