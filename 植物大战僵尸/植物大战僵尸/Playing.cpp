@@ -741,20 +741,6 @@ void PlayingState::render() {
         outtextxy(card.x + 65, card.y + 25, costText);
     }
 
-    // 绘制被选中的植物（跟随鼠标，移到循环外部）
-    for (const auto& card : cards) {
-        if (card.isSelected) {
-            // 使用非阻塞方式获取鼠标位置
-            POINT pt;
-            GetCursorPos(&pt);
-            ScreenToClient(GetHWnd(), &pt);
-            int imgW = card.plantImg.getwidth();
-            int imgH = card.plantImg.getheight();
-            // 使图片中心对准鼠标
-            putimagePng(pt.x - imgW / 2, pt.y - imgH / 2, &card.plantImg, 0, 0, imgW, imgH);
-            break;
-        }
-    }
 	// 绘制关卡进度条
 	if (scrollState >= 4) {
 		levelMeter.draw();
@@ -769,22 +755,6 @@ void PlayingState::render() {
 		}
 	}
 
-	// 绘制铲子
-	if (scrollState >= 4) {
-		putimagePng(shovelX, shovelY, &shovelBackImg, 0, 0, shovelBackImg.getwidth(), shovelBackImg.getheight());
-		if (shovelSelected) {
-			// 铲子跟随鼠标
-			POINT pt;
-			GetCursorPos(&pt);
-			ScreenToClient(GetHWnd(), &pt);
-			int sw = shovelImg.getwidth();
-			int sh = shovelImg.getheight();
-			putimagePng(pt.x - sw / 2, pt.y - sh / 2, &shovelImg, 0, 0, sw, sh);
-		}
-		else {
-			putimagePng(shovelX, shovelY, &shovelImg, 0, 0, shovelImg.getwidth(), shovelImg.getheight());
-		}
-	}
 
     // 绘制所有植物
     for (auto& plantPtr : plantsList) {
@@ -826,9 +796,39 @@ void PlayingState::render() {
     for (auto& bullet : g_bullets) {
         bullet->draw((int)cameraX);
     }
+	// 绘制铲子
+	if (scrollState >= 4) {
+		putimagePng(shovelX, shovelY, &shovelBackImg, 0, 0, shovelBackImg.getwidth(), shovelBackImg.getheight());
+		if (shovelSelected) {
+			// 铲子跟随鼠标
+			POINT pt;
+			GetCursorPos(&pt);
+			ScreenToClient(GetHWnd(), &pt);
+			int sw = shovelImg.getwidth();
+			int sh = shovelImg.getheight();
+			putimagePng(pt.x - sw / 2, pt.y - sh / 2, &shovelImg, 0, 0, sw, sh);
+		}
+		else {
+			putimagePng(shovelX, shovelY, &shovelImg, 0, 0, shovelImg.getwidth(), shovelImg.getheight());
+		}
+	}
+    // 绘制被选中的植物（跟随鼠标，移到循环外部）
+    for (const auto& card : cards) {
+        if (card.isSelected) {
+            // 使用非阻塞方式获取鼠标位置
+            POINT pt;
+            GetCursorPos(&pt);
+            ScreenToClient(GetHWnd(), &pt);
+            int imgW = card.plantImg.getwidth();
+            int imgH = card.plantImg.getheight();
+            // 使图片中心对准鼠标
+            putimagePng(pt.x - imgW / 2, pt.y - imgH / 2, &card.plantImg, 0, 0, imgW, imgH);
+            break;
+        }
 }
 
 
+}
 // bullet-zombie collision (row-bucketed)
 void checkBulletCollision(std::vector<std::unique_ptr<Zombies>>& zombies) {
     std::vector<Zombies*> rowBuckets[5];

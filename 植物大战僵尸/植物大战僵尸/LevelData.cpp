@@ -60,7 +60,7 @@ void LevelData::createDefaultFile() {
     if (!file) return;
     // 写入默认数据
     file << "15\n";                 // 总波数
-    file << "0,1\n";                 // 僵尸类型（0=普通僵尸, 1=路障僵尸）
+    file << "0,1,3\n";                 // 僵尸类型（0=普通僵尸, 1=路障僵尸, 3=橄榄球僵尸）
     file << "30,30,50,50,70,70,100,120,150,150,150,150,160,200,300\n";  // 每波权重
     file.close();
     std::cout << "Created default leveldata.txt" << std::endl;

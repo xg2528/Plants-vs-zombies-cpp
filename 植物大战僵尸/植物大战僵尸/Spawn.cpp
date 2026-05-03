@@ -1,6 +1,7 @@
 #include"pch.h"
 #include"Spawn.h"
 #include"Constants.h"
+#include <cmath>
 void Spawn::update(float delta) {
     timer += delta;
     if (timer >= frequency) {
@@ -46,7 +47,28 @@ void Spawn::update(float delta) {
             }
             if (validTypes.empty()) break;
 
-            int type = validTypes[rand() % validTypes.size()];
+            // 加权随机：用 sqrt(cost) 缩小贵贱僵尸的权重差距
+            int totalWeighted = 0;
+            for (int t : validTypes) {
+                int c = 0;
+                switch (t) {
+                case 0: c = 10; break; case 1: c = 20; break; case 3: c = 50; break;
+                default: c = 10; break;
+                }
+                totalWeighted += (int)((spawnWeight[currentWave] - currentWeight) / std::sqrt((float)c));
+            }
+            int pick = rand() % totalWeighted;
+            int type = validTypes[0];
+            int accum = 0;
+            for (int t : validTypes) {
+                int c = 0;
+                switch (t) {
+                case 0: c = 10; break; case 1: c = 20; break; case 3: c = 50; break;
+                default: c = 10; break;
+                }
+                accum += (int)((spawnWeight[currentWave] - currentWeight) / std::sqrt((float)c));
+                if (pick < accum) { type = t; break; }
+            }
             int cost = 0;
             switch (type) {
             case 0: cost = 10; break;
