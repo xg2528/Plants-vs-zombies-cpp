@@ -167,9 +167,9 @@ private:
 	bool dying;
 	float deathTimer;
 	int deathFrame;
-	static const int HELMET_LOST_HP = 960;
+	static const int HELMET_LOST_HP = 360;
 	static const int HEAD_LOST_HP = 60;
-	static const int MAX_HP = 1860;
+	static const int MAX_HP = 2460;
 	static std::vector<IMAGE> s_walk;
 	static std::vector<IMAGE> s_attack;
 	static std::vector<IMAGE> s_ornlost_walk;

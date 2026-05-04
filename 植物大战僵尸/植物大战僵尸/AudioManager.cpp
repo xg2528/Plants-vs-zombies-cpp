@@ -10,10 +10,26 @@ void AudioManager::playEffect(const std::string& name)
 	if (m_isMuted) return;
 	auto it = m_effectPaths.find(name);
 	if (it == m_effectPaths.end())	return;
+
+	// 限流：同一音效在时间窗口内最多同时存在 MAX_SAME_EFFECT 个
+	{
+		auto now = std::chrono::steady_clock::now();
+		auto& timestamps = m_recentPlays[name];
+		// 清理过期记录
+		auto window = std::chrono::duration_cast<std::chrono::steady_clock::duration>(
+			std::chrono::duration<float>(EFFECT_WINDOW));
+		timestamps.erase(
+			std::remove_if(timestamps.begin(), timestamps.end(),
+				[&](const auto& t) { return now - t > window; }),
+			timestamps.end());
+		if ((int)timestamps.size() >= MAX_SAME_EFFECT) return;
+		timestamps.push_back(now);
+	}
+
 	static int id = 0;
 	// 打开设备
 	std::string alias = "Effect_" + std::to_string(id++);
-	std::string openCmd = "open \"" + it->second + "\" alias " + alias;//得到路径并生成别名，前面的alias用来告诉系统这是一个别名，后面是别名的名字，""表示路径
+	std::string openCmd = "open \"" + it->second + "\" alias " + alias;
 	mciSendStringA(openCmd.c_str(), NULL, 0, NULL);
 	// 播放（异步，不循环）
 	std::string playCmd = "play " + alias;
