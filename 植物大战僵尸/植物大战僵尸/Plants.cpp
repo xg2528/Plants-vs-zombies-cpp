@@ -1,7 +1,7 @@
 #include"pch.h"
 #include"Plants.h"
-#include"Spawn.h"
 #include"Constants.h"
+#include"Bullet.h"
 extern void  putimagePng(int img_x, int img_y, const IMAGE* pSrcImg, int srcX, int srcY, int srcW, int srcH);
 void Peashooter::loadImgs()
 {

@@ -1,9 +1,6 @@
 #pragma once
 #include<easyx.h>
 #include"GameState.h"
-#include "AudioManager.h"
-#include"Game.h"
-#include"Playing.h"
 
 class Menu :public GameState
 {

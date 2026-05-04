@@ -1,5 +1,8 @@
 #include"pch.h"
 #include"Menu.h"
+#include"Playing.h"
+#include"AudioManager.h"
+#include"Game.h"
 extern AudioManager audio;  // 假设 audio 是全局对象
 // 在当前设备上绘制带透明通道的png图片的指定区域
 // img_x, img_y   : 目标位置（窗口坐标）

@@ -2,14 +2,10 @@
 #include "GameState.h"
 #include <easyx.h>
 #include<memory>
-#include"Game.h"
-#include"Menu.h"
 #include "Spawn.h"
-#include<chrono>
 #include"LevelData.h"
 #include"LevelMeter.h"
-#include "Bullet.h"   // 需要包含子弹基类头文件（如果尚未包含）
-#include <algorithm>  // 用于 remove_if
+#include "Bullet.h"
 
 class PlayingState : public GameState {
 public:

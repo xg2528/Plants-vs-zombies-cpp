@@ -1,6 +1,5 @@
 #include "pch.h"
 #include "Bullet.h"
-#include <cmath>
 
 extern void putimagePng(int img_x, int img_y, const IMAGE* pSrcImg, int srcX, int srcY, int srcW, int srcH);
 

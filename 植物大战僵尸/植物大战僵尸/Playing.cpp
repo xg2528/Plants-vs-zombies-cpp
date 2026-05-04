@@ -1,12 +1,15 @@
 #include "pch.h"
 #include "Playing.h"
 #include <cmath>
-#include "AudioManager.h" // 如果需要播放音乐
+#include <algorithm>
+#include "AudioManager.h"
 #include "Plants.h"
 #include "Sun.h"
 #include"Zombies.h"
 #include"Spawn.h"
 #include"Constants.h"
+#include"Menu.h"
+#include"Game.h"
 void checkBulletCollision(std::vector<std::unique_ptr<Zombies>>& zombies);
 void checkPlantCollision(std::vector<std::unique_ptr<Zombies>>& zombies,
     Plants* gridPlants[GRID_ROWS][GRID_COLS],

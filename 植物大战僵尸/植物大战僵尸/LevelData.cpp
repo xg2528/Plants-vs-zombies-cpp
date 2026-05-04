@@ -2,7 +2,6 @@
 #include "LevelData.h"
 #include <fstream>
 #include <sstream>
-#include <iostream>
 
 LevelData::LevelData() {
     loadFromFile();
