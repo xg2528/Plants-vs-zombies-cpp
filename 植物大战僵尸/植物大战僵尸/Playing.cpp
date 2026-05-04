@@ -14,7 +14,7 @@ void checkBulletCollision(std::vector<std::unique_ptr<Zombies>>& zombies);
 void checkPlantCollision(std::vector<std::unique_ptr<Zombies>>& zombies,
     Plants* gridPlants[GRID_ROWS][GRID_COLS],
     float delta);
-void checkWin(std::vector<std::unique_ptr<Zombies>>& zombies);
+void checkWin(std::vector<std::unique_ptr<Zombies>>& zombies, bool& gameLost);
 extern void  putimagePng(int img_x, int img_y, const IMAGE* pSrcImg, int srcX, int srcY, int srcW, int srcH);
 extern AudioManager audio;
 std::vector<std::unique_ptr<Bullet>> g_bullets;
@@ -36,10 +36,14 @@ void PlayingState::onEnter() {
     loadimage(&background, _T("resource/images/interface/background1.jpg"));
     loadimage(&sunBack, _T("resource/images/interface/SunBack.png"));
     // 播放游戏背景音乐（例如 "grasswalk.mp3"）
-    cameraX = 0.0f;// 初始化滚动变量
-    scrollState = 0;           // 0=初始停留
-	currentMusic = 0;         // 0=无音乐
-    //phaseStartTime = std::chrono::steady_clock::now();
+    cameraX = 0.0f;
+    scrollState = 0;
+    currentMusic = 0;
+    frameCounter = 0;
+    lastTime = std::chrono::steady_clock::time_point();
+    plantStartTime = std::chrono::steady_clock::time_point();
+    sunSpawnTimer = 0.0f;
+    gameLost = false;
     currentSun = 150;
 
 
@@ -304,7 +308,7 @@ void PlayingState::handleInput() {
             //检测是否点击了阳光
             for (auto& sun : suns)
             {
-                const IMAGE& img = sun.getFirstFrame();
+                IMAGE img = sun.getFirstFrame();
                 int screenX = sun.worldX - (int)cameraX;
                 int screenY = sun.worldY;
                 int sunRight = screenX + img.getwidth();
@@ -475,7 +479,7 @@ void PlayingState::update() {
     // 停留帧数：约 240 帧（假设 60帧/秒，4秒 ≈ 240帧）
     const int waitFrames = 240;
 
-    static int frameCounter = 0;  // 用于停留计数
+    // frameCounter 现在是类成员，在 onEnter() 中重置
 
     switch (scrollState) {
     case 0: // 初始停留
@@ -539,13 +543,12 @@ void PlayingState::update() {
             audio.playMusic("resource/audio/readysetplant.mp3", false);
             currentMusic = 2;
         }
-        static std::chrono::steady_clock::time_point plantStartTime;
         if (currentMusic == 2) {
             if (plantStartTime.time_since_epoch().count() == 0) {
                 plantStartTime = std::chrono::steady_clock::now();
             }
-            auto now = std::chrono::steady_clock::now();
-            auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - plantStartTime).count();
+            auto now2 = std::chrono::steady_clock::now();
+            auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now2 - plantStartTime).count();
             if (elapsed > 5000) {
                audio.playMusic("resource/audio/UraniwaNi.mp3", true);
                 currentMusic = 3;
@@ -554,8 +557,9 @@ void PlayingState::update() {
         }
         break;
     }
-    static auto lastTime = std::chrono::steady_clock::now();
     auto now = std::chrono::steady_clock::now();
+    if (lastTime.time_since_epoch().count() == 0)
+        lastTime = now;
     float delta = std::chrono::duration<float>(now - lastTime).count();
     lastTime = now;
 
@@ -568,10 +572,9 @@ void PlayingState::update() {
     }
 
     // 在 update 函数末尾，滚动结束后生成阳光
-    static float sunSpawnTimer = 0.0f;
     if (scrollState == 5) {
         sunSpawnTimer += delta;
-		if (sunSpawnTimer >= 5.0f) { // 每5秒掉落一个阳光,正式游戏时应该改成12秒
+		if (sunSpawnTimer >= 5.0f) {
             sunSpawnTimer = 0.0f;
             suns.emplace_back(); // 创建新阳光（构造函数随机位置）
         }
@@ -672,7 +675,7 @@ void PlayingState::update() {
         game.changeState(std::make_unique<Menu>());
     }
     //游戏失败检测
-    checkWin(spawn.getZombies());
+    checkWin(spawn.getZombies(), gameLost);
 	}
 
 
@@ -895,8 +898,7 @@ void checkPlantCollision(std::vector<std::unique_ptr<Zombies>>& zombies,
         }
     }
 }
-void checkWin(std::vector<std::unique_ptr<Zombies>>& zombies) {
-    static bool gameLost = false;   // 确保只触发一次
+void checkWin(std::vector<std::unique_ptr<Zombies>>& zombies, bool& gameLost) {
     if (gameLost) return;
 
     for (auto& zom : zombies) {

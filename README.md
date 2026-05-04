@@ -32,7 +32,7 @@ A basic clone of *Plants vs. Zombies* developed with C++ and EasyX graphics libr
 2. **编译与运行**  
    - 打开 `pvz/pvz.sln` 解决方案文件  
    - 设置 `pvz` 为启动项目  
-   - 编译并运行（Debug / Release 均可） (release 模式有问题) 
+   - 编译并运行（Debug / Release 均可）  
 
 > 注意：首次运行前请确保将资源文件夹 `resource/` 放置在可执行文件所在目录。
 
