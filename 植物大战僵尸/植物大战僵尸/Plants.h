@@ -36,7 +36,7 @@ public:
 	
 	void setHp(int hp)override { m_hp = hp; };
     void loadImgs()override;
-	Peashooter() : Plants(12), shootTimer(0.0f), shootInterval(1.0f), currentFrame(0), animTimer(0.0f) {
+	Peashooter() : Plants(12), shootTimer(0.0f), shootInterval(1.0f), currentFrame(0), animTimer(0.0f), aimInterval(0.1f) {
 		loadImgs();
 	}
 	void update(float delta)override;
